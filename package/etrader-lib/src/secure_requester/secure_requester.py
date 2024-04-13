@@ -79,8 +79,98 @@ class SecureRequester:
             status_forcelist (list, optional): The list of HTTP status codes that should trigger a retry. Defaults to [500, 502, 503, 504].
         """
 
-        # Initialize the authentication dictionary.
+        # Initialize the public attributes.
+        self.reties = retries
+        self.backoff_factor = backoff_factor
+        self.status_forcelist = status_forcelist
+
+        # Initialize the authentication dictionary, private attribute.
         self.__auth = copy.deepcopy(OAUTH1_DICT)
         for key in self.__auth:
             if key in locals():
                 self.__auth[key] = locals()[key]
+
+
+    def get(self, url: str, params: dict = None, timeout: int = 10) -> dict:
+        """
+        Sends a GET request to the server.
+
+        Args:
+            url (str): The URL to send the request to.
+            params (dict, optional): The parameters for the request. Defaults to None.
+
+        Returns:
+            dict: The response from the server.
+        """
+
+        # Create a session with a retry strategy.
+        session = get_retry_session()
+
+        # Send the GET request.
+        response = session.get(url, params=params, auth=self.__auth, timeout=timeout)
+
+        # Return the response.
+        return response.json()
+
+
+    def post(self, url: str, data: dict = None, timeout: int = 10) -> dict:
+        """
+        Sends a POST request to the server.
+
+        Args:
+            url (str): The URL to send the request to.
+            data (dict, optional): The data for the request. Defaults to None.
+
+        Returns:
+            dict: The response from the server.
+        """
+
+        # Create a session with a retry strategy.
+        session = get_retry_session()
+
+        # Send the POST request.
+        response = session.post(url, data=data, auth=self.__auth, timeout=timeout)
+
+        # Return the response.
+        return response.json()
+    
+    def put(self, url: str, data: dict = None, timeout: int = 10) -> dict:
+        """
+        Sends a PUT request to the server.
+
+        Args:
+            url (str): The URL to send the request to.
+            data (dict, optional): The data for the request. Defaults to None.
+
+        Returns:
+            dict: The response from the server.
+        """
+
+        # Create a session with a retry strategy.
+        session = get_retry_session()
+
+        # Send the PUT request.
+        response = session.put(url, data=data, auth=self.__auth, timeout=timeout)
+
+        # Return the response.
+        return response.json()
+    
+    def delete(self, url: str, data: dict = None, timeout: int = 10) -> dict:
+        """
+        Sends a DELETE request to the server.
+
+        Args:
+            url (str): The URL to send the request to.
+
+        Returns:
+            dict: The response from the server.
+        """
+
+        # Create a session with a retry strategy.
+        session = get_retry_session()
+
+        # Send the DELETE request.
+        response = session.delete(url, data=data, auth=self.__auth, timeout=timeout)
+
+        # Return the response.
+        return response.json()
