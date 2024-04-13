@@ -17,43 +17,6 @@ from requests.adapters import HTTPAdapter
 from urllib3 import Retry
 
 
-def get_retry_session(
-    retries: int = 3,
-    backoff_factor: int = 2,
-    status_forcelist: list = [500, 502, 503, 504],
-) -> Session:
-    """
-    Creates a session with a retry strategy.
-
-    Args:
-        retries (int): The number of retries to make.
-        backoff_factor (int): The backoff factor.
-        status_forcelist (list): The status codes to retry on.
-    Returns:
-        Session: The session with the retry strategy.
-    """
-
-    # Create a session.
-    session = Session()
-
-    # Define the retry strategy
-    retry = Retry(
-        total=retries,
-        read=retries,
-        connect=retries,
-        backoff_factor=backoff_factor,
-        status_forcelist=status_forcelist,
-    )
-    adapter = HTTPAdapter(max_retries=retry)
-
-    # Mount the adapter to the session.
-    session.mount("http://", adapter)
-    session.mount("https://", adapter)
-
-    # Return the session.
-    return session
-
-
 class SecureRequester:
 
     def __init__(
@@ -80,7 +43,7 @@ class SecureRequester:
         """
 
         # Initialize the public attributes.
-        self.reties = retries
+        self.retries = retries
         self.backoff_factor = backoff_factor
         self.status_forcelist = status_forcelist
 
@@ -90,6 +53,35 @@ class SecureRequester:
             if key in locals():
                 self.__auth[key] = locals()[key]
 
+    def get_retry_session(self) -> Session:
+        """
+        Creates a session with a retry strategy.
+
+        Args:
+            None
+        Returns:
+            Session: The session with the retry strategy.
+        """
+
+        # Create a session.
+        session = Session()
+
+        # Define the retry strategy
+        retry = Retry(
+            total=self.retries,
+            read=self.retries,
+            connect=self.retries,
+            backoff_factor=self.backoff_factor,
+            status_forcelist=self.status_forcelist,
+        )
+        adapter = HTTPAdapter(max_retries=retry)
+
+        # Mount the adapter to the session.
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
+
+        # Return the session.
+        return session
 
     def get(self, url: str, params: dict = None, timeout: int = 10) -> dict:
         """
@@ -104,7 +96,7 @@ class SecureRequester:
         """
 
         # Create a session with a retry strategy.
-        session = get_retry_session()
+        session = self.get_retry_session()
 
         # Send the GET request.
         response = session.get(url, params=params, auth=self.__auth, timeout=timeout)
@@ -126,7 +118,7 @@ class SecureRequester:
         """
 
         # Create a session with a retry strategy.
-        session = get_retry_session()
+        session = self.get_retry_session()
 
         # Send the POST request.
         response = session.post(url, data=data, auth=self.__auth, timeout=timeout)
@@ -147,7 +139,7 @@ class SecureRequester:
         """
 
         # Create a session with a retry strategy.
-        session = get_retry_session()
+        session = self.get_retry_session()
 
         # Send the PUT request.
         response = session.put(url, data=data, auth=self.__auth, timeout=timeout)
@@ -167,7 +159,7 @@ class SecureRequester:
         """
 
         # Create a session with a retry strategy.
-        session = get_retry_session()
+        session = self.get_retry_session()
 
         # Send the DELETE request.
         response = session.delete(url, data=data, auth=self.__auth, timeout=timeout)
