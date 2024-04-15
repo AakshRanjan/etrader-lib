@@ -99,11 +99,12 @@ class SecureRequester:
         session = self.get_retry_session()
 
         # Send the GET request.
-        response = session.get(url, params=params, auth=self.__auth, timeout=timeout)
+        response = session.get(
+            url, params=params, auth=self.__auth, timeout=timeout
+        )
 
         # Return the response.
         return response.json()
-
 
     def post(self, url: str, data: dict = None, timeout: int = 10) -> dict:
         """
@@ -121,11 +122,13 @@ class SecureRequester:
         session = self.get_retry_session()
 
         # Send the POST request.
-        response = session.post(url, data=data, auth=self.__auth, timeout=timeout)
+        response = session.post(
+            url, data=data, auth=self.__auth, timeout=timeout
+        )
 
         # Return the response.
         return response.json()
-    
+
     def put(self, url: str, data: dict = None, timeout: int = 10) -> dict:
         """
         Sends a PUT request to the server.
@@ -142,11 +145,13 @@ class SecureRequester:
         session = self.get_retry_session()
 
         # Send the PUT request.
-        response = session.put(url, data=data, auth=self.__auth, timeout=timeout)
+        response = session.put(
+            url, data=data, auth=self.__auth, timeout=timeout
+        )
 
         # Return the response.
         return response.json()
-    
+
     def delete(self, url: str, data: dict = None, timeout: int = 10) -> dict:
         """
         Sends a DELETE request to the server.
@@ -162,7 +167,9 @@ class SecureRequester:
         session = self.get_retry_session()
 
         # Send the DELETE request.
-        response = session.delete(url, data=data, auth=self.__auth, timeout=timeout)
+        response = session.delete(
+            url, data=data, auth=self.__auth, timeout=timeout
+        )
 
         # Return the response.
         return response.json()
