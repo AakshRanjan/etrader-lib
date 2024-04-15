@@ -12,6 +12,7 @@ from constants import OAUTH1_DICT
 import copy
 
 from requests import Session
+from requests.models import Response
 from requests.adapters import HTTPAdapter
 
 from urllib3 import Retry
@@ -83,7 +84,7 @@ class SecureRequester:
         # Return the session.
         return session
 
-    def get(self, url: str, params: dict = None, timeout: int = 10) -> dict:
+    def get(self, url: str, params: dict = None, timeout: int = 10) -> Response:
         """
         Sends a GET request to the server.
 
@@ -103,10 +104,13 @@ class SecureRequester:
             url, params=params, auth=self.__auth, timeout=timeout
         )
 
-        # Return the response.
-        return response.json()
+        # Close the session.
+        session.close()
 
-    def post(self, url: str, data: dict = None, timeout: int = 10) -> dict:
+        # Return the response.
+        return response
+
+    def post(self, url: str, data: dict = None, timeout: int = 10) -> Response:
         """
         Sends a POST request to the server.
 
@@ -126,10 +130,13 @@ class SecureRequester:
             url, data=data, auth=self.__auth, timeout=timeout
         )
 
-        # Return the response.
-        return response.json()
+        # Close the session.
+        session.close()
 
-    def put(self, url: str, data: dict = None, timeout: int = 10) -> dict:
+        # Return the response.
+        return response
+
+    def put(self, url: str, data: dict = None, timeout: int = 10) -> Response:
         """
         Sends a PUT request to the server.
 
@@ -149,10 +156,13 @@ class SecureRequester:
             url, data=data, auth=self.__auth, timeout=timeout
         )
 
-        # Return the response.
-        return response.json()
+        # Close the session.
+        session.close()
 
-    def delete(self, url: str, data: dict = None, timeout: int = 10) -> dict:
+        # Return the response.
+        return response
+
+    def delete(self, url: str, data: dict = None, timeout: int = 10) -> Response:
         """
         Sends a DELETE request to the server.
 
@@ -171,5 +181,8 @@ class SecureRequester:
             url, data=data, auth=self.__auth, timeout=timeout
         )
 
+        # Close the session.
+        session.close()
+
         # Return the response.
-        return response.json()
+        return response
