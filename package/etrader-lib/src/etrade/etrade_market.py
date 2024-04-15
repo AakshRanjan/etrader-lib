@@ -85,7 +85,7 @@ class ETradeMarket:
         # Example: {<Thread(Thread-1, started 1234)>: ["AAPL", "GOOGL"], ...}
         self.symbols_tracker = {}
 
-    def track_symbols(self, symbols: list) -> None:
+    def add_symbols(self, symbols: list) -> None:
         """
         Creates a tracker for the given symbols.
 
@@ -129,6 +129,38 @@ class ETradeMarket:
             # Add the symbol to the symbols_data attribute.
             self.symbols_data[symbol] = {"symbol": symbol, "price": None}
 
+    def remove_symbols(self, symbols: list) -> None:
+        """
+        Removes the given symbols from the tracker.
+
+        Args:
+            symbol (list): A list of symbols to remove.
+        Returns:
+            None
+        """
+
+        # Check if the symbols list is empty.
+        if len(symbols) == 0:
+            raise ValueError("You must provide at least one symbol to remove.")
+
+        for symbol in symbols:
+            # Check if the symbol is being tracked.
+            if symbol not in self.symbols_data:
+                raise ValueError(
+                    f"The symbol {symbol} is not being tracked."
+                )
+
+            # Remove the symbol from the symbols_data attribute.
+            del self.symbols_data[symbol]
+
+            # Find the thread that is tracking the symbol.
+            for thread, symbols in self.symbols_tracker.items():
+                if symbol in symbols:
+                    thread.remove_symbol(symbol)
+                    if len(thread.symbols) == 0:
+                        thread.join()
+                        del self.symbols_tracker[thread]
+                    break
 
 class SymbolTracker(threading.Thread):
     """
