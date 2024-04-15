@@ -1,6 +1,6 @@
 """
 This module contains the Etrade class which is used to interact with the Etrade API.
-It provides methods to fetch stock data, place orders, and more.
+It provides methods to place orders, and more.
 
 Author: Aaksh Ranjan
 Date: 2024-04-12
@@ -9,7 +9,7 @@ Date: 2024-04-12
 from . import SecureRequester
 
 
-class EtradeOrder:
+class ETradeOrder:
     """
     A class to interact with the Etrade API.
     """
