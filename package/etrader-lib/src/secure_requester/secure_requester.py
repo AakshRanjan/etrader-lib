@@ -7,6 +7,7 @@ Author: Aaksh Ranjan
 Date: 2024-04-12
 """
 
+import dataclasses
 import logging
 
 from requests import Session
@@ -18,6 +19,19 @@ from urllib3 import Retry
 
 
 logger = logging.getLogger(__name__)
+
+
+@dataclasses.dataclass
+class RequeterTokens:
+    """
+    A class to store the requester tokens securely.
+    """
+
+    client_key: str
+    client_secret: str
+    resource_owner_key: str
+    resource_owner_secret: str
+    callback_uri: str
 
 
 class SecureRequester:
@@ -70,18 +84,20 @@ class SecureRequester:
         self.debug = debug
 
         # Initialize the Private attributes.
-        self.__client_key = client_key
-        self.__client_secret = client_secret
-        self.__resource_owner_key = resource_owner_key
-        self.__resource_owner_secret = resource_owner_secret
-        self.__callback_uri = callback_uri
+        self.__requester_tokens = RequeterTokens(
+            client_key=client_key,
+            client_secret=client_secret,
+            resource_owner_key=resource_owner_key,
+            resource_owner_secret=resource_owner_secret,
+            callback_uri=callback_uri,
+        )
 
         # Set the logger level.
         if self.debug:
             logger.setLevel(logging.DEBUG)
 
         # Check if the client key and client secret are provided.
-        if self.__client_key is None or self.__client_secret is None:
+        if client_key is None or client_secret is None:
             logger.debug(
                 "Client Key is %s and Client Secret is %s",
                 client_key,
@@ -101,11 +117,11 @@ class SecureRequester:
 
         # Create a Oauth1 session.
         session = OAuth1Session(
-            client_key=self.__client_key,
-            client_secret=self.__client_secret,
-            resource_owner_key=self.__resource_owner_key,
-            resource_owner_secret=self.__resource_owner_secret,
-            callback_uri=self.__callback_uri,
+            client_key=self.__requester_tokens.client_key,
+            client_secret=self.__requester_tokens.client_secret,
+            resource_owner_key=self.__requester_tokens.resource_owner_key,
+            resource_owner_secret=self.__requester_tokens.resource_owner_secret,
+            callback_uri=self.__requester_tokens.callback_uri,
         )
 
         # Define the retry strategy
