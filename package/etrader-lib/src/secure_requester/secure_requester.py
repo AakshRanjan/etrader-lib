@@ -7,18 +7,24 @@ Author: Aaksh Ranjan
 Date: 2024-04-12
 """
 
-from constants import OAUTH1_DICT
-
-import copy
+import logging
 
 from requests import Session
 from requests.models import Response
 from requests.adapters import HTTPAdapter
 
+from requests_oauthlib import OAuth1Session
 from urllib3 import Retry
 
 
+logger = logging.getLogger(__name__)
+
+
 class SecureRequester:
+    """
+    A class to send secure requests to a server. It provides a retry strategy for failed requests.
+    This class is designed to be multi-thread safe.
+    """
 
     def __init__(
         self,
@@ -26,33 +32,62 @@ class SecureRequester:
         client_secret: str = None,
         resource_owner_key: str = None,
         resource_owner_secret: str = None,
+        callback_uri: str = None,
         retries: int = 3,
         backoff_factor: int = 2,
-        status_forcelist: list = [500, 502, 503, 504],
+        status_forcelist: list = None,
+        debug: bool = False,
     ) -> None:
         """
         Initializes the SecureRequester object.
 
         Args:
-            client_key (str, optional): The client key. Defaults to None.
-            client_secret (str, optional): The client secret. Defaults to None.
-            resource_owner_key (str, optional): The resource owner key. Defaults to None.
-            resource_owner_secret (str, optional): The resource owner secret. Defaults to None.
-            retries (int, optional): The number of retries for failed requests. Defaults to 3.
-            backoff_factor (int, optional): The backoff factor for retrying requests. Defaults to 2.
-            status_forcelist (list, optional): The list of HTTP status codes that should trigger a retry. Defaults to [500, 502, 503, 504].
+            client_key (str): The client key for the OAuth1 session.
+            client_secret (str): The client secret for the OAuth1 session.
+            resource_owner_key (str): The resource owner key for the OAuth1 session.
+            resource_owner_secret (str): The resource owner secret for the OAuth1 session.
+            callback_uri (str): The callback URI for the OAuth1 session.
+
+            retries (int, optional): The number of retries for the request.
+                Defaults to 3.
+            backoff_factor (int, optional): The backoff factor for the request.
+                Defaults to 2.
+            status_forcelist (list, optional): The status codes to retry on.
+                Defaults to [500, 502, 503, 504].
+            debug (bool, optional): The debug flag.
+                Defaults to False.
+        Returns:
+            None
         """
 
         # Initialize the public attributes.
         self.retries = retries
         self.backoff_factor = backoff_factor
-        self.status_forcelist = status_forcelist
+        if status_forcelist is None:
+            self.status_forcelist = [500, 502, 503, 504]
+        else:
+            self.status_forcelist = status_forcelist
+        self.debug = debug
 
-        # Initialize the authentication dictionary, private attribute.
-        self.__auth = copy.deepcopy(OAUTH1_DICT)
-        for key in self.__auth:
-            if key in locals():
-                self.__auth[key] = locals()[key]
+        # Initialize the Private attributes.
+        self.__client_key = client_key
+        self.__client_secret = client_secret
+        self.__resource_owner_key = resource_owner_key
+        self.__resource_owner_secret = resource_owner_secret
+        self.__callback_uri = callback_uri
+
+        # Set the logger level.
+        if self.debug:
+            logger.setLevel(logging.DEBUG)
+
+        # Check if the client key and client secret are provided.
+        if self.__client_key is None or self.__client_secret is None:
+            logger.debug(
+                "Client Key is %s and Client Secret is %s",
+                client_key,
+                client_secret,
+            )
+            raise ValueError("Client key and client secret are required.")
 
     def get_retry_session(self) -> Session:
         """
@@ -64,8 +99,14 @@ class SecureRequester:
             Session: The session with the retry strategy.
         """
 
-        # Create a session.
-        session = Session()
+        # Create a Oauth1 session.
+        session = OAuth1Session(
+            client_key=self.__client_key,
+            client_secret=self.__client_secret,
+            resource_owner_key=self.__resource_owner_key,
+            resource_owner_secret=self.__resource_owner_secret,
+            callback_uri=self.__callback_uri,
+        )
 
         # Define the retry strategy
         retry = Retry(
@@ -84,7 +125,9 @@ class SecureRequester:
         # Return the session.
         return session
 
-    def get(self, url: str, params: dict = None, timeout: int = 10) -> Response:
+    def get(
+        self, url: str, params: dict = None, timeout: int = 10
+    ) -> Response:
         """
         Sends a GET request to the server.
 
@@ -100,9 +143,7 @@ class SecureRequester:
         session = self.get_retry_session()
 
         # Send the GET request.
-        response = session.get(
-            url, params=params, auth=self.__auth, timeout=timeout
-        )
+        response = session.get(url, params=params, timeout=timeout)
 
         # Close the session.
         session.close()
@@ -126,9 +167,7 @@ class SecureRequester:
         session = self.get_retry_session()
 
         # Send the POST request.
-        response = session.post(
-            url, data=data, auth=self.__auth, timeout=timeout
-        )
+        response = session.post(url, data=data, timeout=timeout)
 
         # Close the session.
         session.close()
@@ -152,9 +191,7 @@ class SecureRequester:
         session = self.get_retry_session()
 
         # Send the PUT request.
-        response = session.put(
-            url, data=data, auth=self.__auth, timeout=timeout
-        )
+        response = session.put(url, data=data, timeout=timeout)
 
         # Close the session.
         session.close()
@@ -162,7 +199,9 @@ class SecureRequester:
         # Return the response.
         return response
 
-    def delete(self, url: str, data: dict = None, timeout: int = 10) -> Response:
+    def delete(
+        self, url: str, data: dict = None, timeout: int = 10
+    ) -> Response:
         """
         Sends a DELETE request to the server.
 
@@ -177,9 +216,7 @@ class SecureRequester:
         session = self.get_retry_session()
 
         # Send the DELETE request.
-        response = session.delete(
-            url, data=data, auth=self.__auth, timeout=timeout
-        )
+        response = session.delete(url, data=data, timeout=timeout)
 
         # Close the session.
         session.close()
